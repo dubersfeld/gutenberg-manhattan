@@ -1,11 +1,54 @@
 server:
   port: 8081
-  servlet:
-    context-path:
-    
+
 spring:
-  data:
+  application:
+    name: book-service
+        
+#sator: TENETdefault 
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile:
+      - dev
+    import:
+      "optional:configserver:http://config-server:8888/"        
+  application:
+    name: book-service
+                  
+---
+# test profile only
+spring:
+  config:
+    activate:
+      on-profile:
+      - test
+      
+  data:   
     mongodb:
       uri: mongodb://spring:password1234@localhost:27017/booksonline
-     
-          
+      #host: localhost
+      #port: 27017
+      #database: product-db
+      auto-index-creation: true
+      
+ 
+
+
+enclume: ENCLUMEtest
+sator: SATORtest
+arepo: AREPOtest
+#management.endpoint.health.show-details: "ALWAYS"
+              
+server:
+  port: 8081
+
+logging:
+  level:
+    root: INFO
+    com.dub.spring: DEBUG
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+    

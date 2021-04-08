@@ -1,13 +1,16 @@
-server:
-  port: 8082
-  servlet:
-    context-path:
-    
 spring:
+  config: 
+    activate:
+      on-profile:
+        dev
   data:
     mongodb:
       uri: mongodb://spring:password1234@mongodb-books:27017/booksonline
       
+server:
+  port: 8083
+  servlet:
+    context-path:
 
 eureka:
   instance:
@@ -17,8 +20,12 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: ${EUREKASERVER_URI}
+     
+     
+# base server URLs
+baseBooksUrl: http://book-service:8081 
+
+spring.webflux.hiddenmethod.filter.enabled: false
+    
 
 
-#baseReviewsUrl: http://localhost:8082
-#baseReviewsUrl: http://gateway-service:5555/reviews
-baseReviewsUrl: ${BASE_REVIEWS_URL}

@@ -114,8 +114,10 @@ public class OrderHandler {
 	
 	public Mono<ServerResponse> updateOrder(ServerRequest request) {
 		
+		System.err.println("Fucking /updateOrder begin");
 		final Mono<Order> toto = request
 									.bodyToMono(Order.class);
+	
 		return toto
 				.flatMap(transformUpdateOrder)
 				.flatMap(orderSuccess)
@@ -237,6 +239,7 @@ public class OrderHandler {
 	private Function<Order, Mono<Order>> transformUpdateOrder =
 			order -> {
 				try {
+					System.err.println("Fucking transformUpdateOrder return");
 					return orderService.saveOrder(order, false);
 				} catch (Exception e) {
 					return Mono.error(new RuntimeException("SATOR"));
@@ -256,7 +259,8 @@ public class OrderHandler {
 	
 	private Function<Throwable, Mono<ServerResponse>> orderFallback =
 			error -> {
-				
+				System.err.println("Fucking orderFallback error "
+						+ error);
 				return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)				
 						.build();	  			
 	};
@@ -265,6 +269,7 @@ public class OrderHandler {
 	private Function<Order, Mono<ServerResponse>> orderSuccess =
 			order -> {
 			
+				System.err.println("Fucking orderSuccess return");
 				return ServerResponse.ok()
 						.contentType(MediaType.APPLICATION_JSON)
 						.body(Mono.just(order), Order.class);	  			
@@ -292,6 +297,7 @@ public class OrderHandler {
 	
 	private Function<Flux<String>, Mono<ServerResponse>> notReviewedSuccess = 
 			s -> {
+				
 					return ServerResponse.ok()
 							.contentType(MediaType.TEXT_EVENT_STREAM)
 							//.contentType(MediaType.APPLICATION_JSON)

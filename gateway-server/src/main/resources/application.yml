@@ -1,5 +1,42 @@
 server:
   port: 5555
+
+sator: SATORlocal
+
+---
+
+# dev profile
+spring:
+  config:
+    activate:
+      on-profile:
+      - dev
+    import:
+      "optional:configserver:http://config-server:8888/"        
+  application:
+    name: gateway-service 
+    
+    
+#spring.cloud.gateway.routes:
+#- id: books
+#  uri: http://book-service:8081
+#  predicates:
+#  - Path=/books/**
+#  filters:
+#  - StripPrefix=1      
+
+---
+  
+# local profile  
+spring:
+  config:
+    activate:
+      on-profile:
+      - local
+    import:
+      "optional:configserver:http://config-server:8888/"        
+  application:
+    name: gateway-service   
   
 eureka:
   instance:
@@ -10,40 +47,35 @@ eureka:
     service-url:
       defaultZone: ${EUREKASERVER_URI}
 
-spring:
-  cloud:
-    config:
-      uri : ${GUTENBERG_CONFIG_URI}
-  
-    gateway:
-      routes:
-      - id: books
-        uri: http://localhost:8081
-        predicates:
-        - Path=/books/**
-        filters:
-        - StripPrefix=1 
-      - id: users
-        uri: http://localhost:8084
-        predicates:
-        - Path=/users/**
-        filters:
-        - StripPrefix=1 
-      - id: orders
-        uri: http://localhost:8083
-        predicates:
-        - Path=/orders/**
-        filters:
-        - StripPrefix=1 
-      - id: reviews
-        uri: http://localhost:8082
-        predicates:
-        - Path=/reviews/**
-        filters:
-        - StripPrefix=1 
+spring.cloud.gateway:
+  routes:
+  - id: books
+    uri: http://localhost:8081
+    predicates:
+    - Path=/books/**
+    filters:
+    - StripPrefix=1 
+  - id: users
+    uri: http://localhost:8084
+    predicates:
+    - Path=/users/**
+    filters:
+    - StripPrefix=1 
+  - id: orders
+    uri: http://localhost:8083
+    predicates:
+    - Path=/orders/**
+    filters:
+    - StripPrefix=1 
+  - id: reviews
+    uri: http://localhost:8082
+    predicates:
+    - Path=/reviews/**
+    filters:
+    - StripPrefix=1 
         
-      httpclient:
-        connect-timeout: 10000
-        response-timeout: 10s
+  httpclient:
+    connect-timeout: 10000
+    response-timeout: 10s
         
         

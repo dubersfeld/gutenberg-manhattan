@@ -11,6 +11,9 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwi
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -63,12 +66,12 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private ReactiveMongoOperations reactiveMongoOperations;
 	
-	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	//private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
 	@Override
 	public Flux<String> getBooksNotReviewed(UserAndReviewedBooks userAndReviewedBooks) throws ParseException {
 		
-		System.err.println("getBooksNotReviewed begin "
+		System.err.println("Fucking getBooksNotReviewed begin userId "
 				+ userAndReviewedBooks.getUserId()
 				+ " " + userAndReviewedBooks.getReviewedBookIds().size());
 		// preparing an aggregation on orders collection
@@ -76,32 +79,37 @@ public class OrderServiceImpl implements OrderService {
 		UnwindOperation unwind = unwind("lineItems");
 		
 		// set up limit date in application.properties or better add an admin page
-		Date limitDate = correctDate(sdf.parse("2017-04-24"));
-
+		LocalDateTime limitDate = LocalDateTime.of(2017, 
+                Month.APRIL, 24, 19, 30, 40);
+		
+		/** Here I want all orders shipped to the given user */
 		MatchOperation match1 = match(Criteria.where("state").is("SHIPPED")
 											.and("date").gte(limitDate)
 											.and("userId").is(new ObjectId(userAndReviewedBooks.getUserId())));
-										
+			
+		/** Here I want all books not already reviewed by the given user */
 		MatchOperation match2 = match(Criteria.where("bookId").nin(userAndReviewedBooks.getReviewedBookIds()));
 		
 		GroupOperation group = group("bookId").last("userId").as("userId");			
-					
+		
 		ProjectionOperation proj1 = project("lineItems", "userId");
 		ProjectionOperation proj2 = project("userId").and("bookId").previousOperation();
 		ProjectionOperation projAlias = project("userId")							
 					.and("lineItems.bookId").as("bookId");
 		
 		LimitOperation limitOp = limit(userAndReviewedBooks.getOutLimit());
-		
+			
 		Aggregation aggregation = newAggregation(match1, proj1, unwind, projAlias, group, proj2, match2, limitOp);
-
+	
 		Flux<BookUser> bookUsers = reactiveMongoOperations.aggregate(
 				aggregation, "orders", BookUser.class);
 			
 		Flux<String> bookIds = bookUsers.map(b -> b.getBookId());
-		bookIds.subscribe(System.out::println);
-		//return bookUsers.map(b -> b.getBookId());
+		bookIds.subscribe(id -> System.err.println("Fucking id " + id));
+	
+		System.err.println("Fucking getBooksNotReviewed return ");
 		return bookIds;
+		
 	}
 
 	@Override
@@ -195,22 +203,31 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public Mono<Order> editCart(EditCart editCart) {
 		
+		System.err.println("Fucking editCart begin");
 		List<Item> items = editCart.getItems();
 		String orderId = editCart.getOrderId();
 		
+		System.err.println("Fucking editCart SATOR orderId "
+				+ orderId + " items " + editCart.getItems().size());
 		Query query = new Query();
 		query.addCriteria(Criteria.where("id").is(orderId));
 		
 		Update update = new Update();
 		update.set("lineItems", items);
-		
+				
 		Mono<OrderDocument> doc = reactiveMongoOperations.findAndModify(query, update,
 				new FindAndModifyOptions().returnNew(true),
 				OrderDocument.class);
 		
+		System.err.println("Fucking editCart AREPO "
+				+ items.get(0).getBookId());
+			
+		doc.hasElement().subscribe(b -> System.err.println("doc hasElem " + b));
 		// recalculate needed after change
 		Mono<OrderDocument> order = this.recalculateTotalAlt2(doc);
-
+		
+		order.subscribe(or -> System.err.println("TENET " + or.getLineItems().size()));
+				
 		return order.map(OrderUtils::documentToOrder);
 		
 	}
@@ -307,6 +324,8 @@ public class OrderServiceImpl implements OrderService {
 			
 			Flux<String> bookIds = items.map(it -> {
 			
+				System.err.println("Fucking recalculateTotalAlt2 "
+						+ it.getBookId());
 				return it.getBookId();
 			}); 
 			

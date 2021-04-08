@@ -1,5 +1,5 @@
 #!/bin/sh
 
-./cnb/lifecycle/launcher
+./cnb/process/web
 
 

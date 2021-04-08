@@ -3,21 +3,29 @@ package com.dub.spring;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Predicate;
 
+import org.bson.types.ObjectId;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.dub.spring.domain.Review;
+import com.dub.spring.domain.ReviewDocument;
 import com.dub.spring.services.ReviewService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@SpringBootTest
+@ActiveProfiles("test")
+@SpringBootTest(webEnvironment=RANDOM_PORT, properties = {"eureka.client.enabled=false"})
 public class ReviewServiceTest {
 	
 	@Autowired
@@ -34,7 +42,7 @@ public class ReviewServiceTest {
 				System.err.println(review.getText());
 				return review.getText().contains("the most controversial scientist");
 	};
-			
+		
 	
 	@Test
 	void testCreateReview() {	     
@@ -54,6 +62,7 @@ public class ReviewServiceTest {
 		assertEquals(3, checkReview.getRating());
 	}
 	
+
 	@Test
 	void testReviewById() {
 		String reviewId = "5a28f366acc04f7f2e9740b8";
@@ -72,6 +81,7 @@ public class ReviewServiceTest {
 		.verifyComplete();		
 	}
 	
+	
 	@Test
 	void testReviewsByBookId() {
 		String bookId = "5a28f2b0acc04f7f2e9740a5";
@@ -81,7 +91,6 @@ public class ReviewServiceTest {
 		.expectNextCount(2)
 		.verifyComplete();		
 		
-	
 	}
 	
 
@@ -112,6 +121,7 @@ public class ReviewServiceTest {
 		assertTrue(status.block());
 		
 	}
+
 
 	@Test
 	void testVoteHelpfulConflict() {

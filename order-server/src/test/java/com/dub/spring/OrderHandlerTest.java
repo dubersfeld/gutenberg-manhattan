@@ -1,6 +1,7 @@
 package com.dub.spring;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -17,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import com.dub.spring.domain.EditCart;
@@ -34,7 +36,8 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 
-@SpringBootTest
+@ActiveProfiles("test")
+@SpringBootTest(webEnvironment=RANDOM_PORT, properties = {"eureka.client.enabled=false"})
 public class OrderHandlerTest {
 
 	@Autowired
@@ -101,7 +104,7 @@ public class OrderHandlerTest {
 	};
 		
 	
-	
+	/*
 	@Test
 	void getBooksNotReviewedTest() {
 		UserAndReviewedBooks urb = new UserAndReviewedBooks();  
@@ -127,7 +130,7 @@ public class OrderHandlerTest {
 		.expectComplete()
 		.verify();	
 	}
-	
+	*/
 
 	
 	private boolean matches(List<Item> list, Item check) {

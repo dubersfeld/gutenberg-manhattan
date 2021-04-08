@@ -1,23 +1,36 @@
 #!/bin/bash
 
-
-
-#for server in 'frontend-server';
-#for server in 'gateway-server' 'config-server' 'eureka-server';
-for server in 'book-server' 'order-server' 'review-server' 'user-server' 'eureka-server' 'gateway-server' 'config-server' 'frontend-server';
+for server in 'book-server' 'order-server' 'review-server' 'user-server'; 
 do 
-    echo ${server}
+  echo ${server}
     pwd
     cd booksonline
     pwd
-    echo "./bookRestore"
+    echo "./booksRestore"
     ./booksRestore
     cd ../../$server
     pwd
     echo "./build"
     ./build
     cd ../dockerbuild
+   
+    echo $?
+    if [ "$?" -ne 0 ]
+    then 
+      echo "Build failed for $server"
+      exit "$?"
+    fi  
 
+done;
+echo "Now building cloud and frontend "
+for server in 'eureka-server' 'gateway-server' 'config-server' 'frontend-server';
+do 
+  echo ${server}
+    cd ../$server  
+    pwd
+    echo "./build"
+    ./build
+    
     echo $?
     if [ "$?" -ne 0 ]
     then 

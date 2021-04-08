@@ -24,7 +24,7 @@ services:
     volumes:
       # edit to match your own filesystem
       - type: bind
-        source: /home/dominique/Documents/workspace-manhattan-clean/config-repo
+        source: /home/dominique/Documents/gutenberg-manhattan/config-repo
         target: /tmp/config-repo
     ports:
       - 8888:8888
@@ -40,8 +40,8 @@ services:
     ports:
       # host:container
       - 8761:8761
-
-  # book-service
+      
+   # book-service
   book-service:
     image: gutenberg/book-server
     depends_on:
@@ -55,7 +55,7 @@ services:
       - CONFIGSERVER_PORT=8888
       - GUTENBERG_CONFIG_URI=http://config-server:8888
       - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
-      - PROFILE=dev
+      - SPRING_PROFILES_ACTIVE=dev    
 
   # review-service
   review-service:
@@ -73,8 +73,8 @@ services:
       - GUTENBERG_CONFIG_URI=http://config-server:8888
       - BASE_REVIEWS_URL=http://gateway-service:5555/reviews
       - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
-      - PROFILE=dev
-
+      - SPRING_PROFILES_ACTIVE=dev
+  
   # order-service
   order-service:
     image: gutenberg/order-server
@@ -90,9 +90,11 @@ services:
       - CONFIGSERVER_HOST=config-server
       - CONFIGSERVER_PORT=8888
       - GUTENBERG_CONFIG_URI=http://config-server:8888
-      - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
-      - PROFILE=dev
-
+      - EUREKASERVER_URI=http://eureka-server:8761/eureka/ 
+      #- EUREKASERVER_HOST=eureka-server
+      #- EUREKASERVER_PORT=8761    
+      - SPRING_PROFILES_ACTIVE=dev   
+            
   # user-service
   user-service:
     image: gutenberg/user-server
@@ -107,10 +109,10 @@ services:
       - CONFIGSERVER_HOST=config-server
       - CONFIGSERVER_PORT=8888
       - GUTENBERG_CONFIG_URI=http://config-server:8888
-      - BASE_USERS_URL=http://user-service:8084/users
+      - BASE_USERS_URL=http://gateway-service:5555/users
       - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
-      - PROFILE=dev
-
+      - SPRING_PROFILES_ACTIVE=dev   
+ 
   # gateway-service
   gateway-service:
     image: gutenberg/gateway-server
@@ -120,7 +122,6 @@ services:
     ports:
       # host:container
       - 5555:5555
-
     environment:
       - BOOKSERVER_URI=http://book-service:8081
       - BOOKSERVER_HOST=book-service
@@ -138,9 +139,9 @@ services:
       - CONFIGSERVER_HOST=config-server
       - CONFIGSERVER_PORT=8888
       - GUTENBERG_CONFIG_URI=http://config-server:8888
-      - PROFILE=dev    
-     
-  # frontend-service
+      - SPRING_PROFILES_ACTIVE=dev  
+      
+      
   frontend-service:
     image: gutenberg/frontend-server
     depends_on:
@@ -154,6 +155,8 @@ services:
       # host:container
       - 8080:8080
     environment:
+      - CONFIGSERVER_HOST=config-server
+      - CONFIGSERVER_PORT=8888
       - BASE_BOOKS_URL=http://gateway-service:5555/books
       - BASE_REVIEWS_URL=http://gateway-service:5555/reviews
       - BASE_ORDERS_URL=http://gateway-service:5555/orders 
@@ -162,7 +165,9 @@ services:
       - GATEWAYSERVER_PORT=5555
       - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
       - GUTENBERG_CONFIG_URI=http://config-server:8888
-      - PROFILE=dev
+      - SPRING_PROFILES_ACTIVE=dev                
+      
+  
 
 volumes:
   booksdb:

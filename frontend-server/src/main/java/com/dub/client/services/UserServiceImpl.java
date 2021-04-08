@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -62,12 +63,16 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public MyUser findByUsername(String username) {
 	
-		MyUser user = userClient
+		
+		WebClient.ResponseSpec enclume = userClient
 				.method(HttpMethod.GET)
 				.uri(USER_BY_NAME + username)
 				.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-				.exchange()
-				.flatMap(catchErrorsAndTransform)
+				.retrieve();
+		
+		MyUser user = enclume
+				.toEntity(MyUser.class) 
+				.flatMap(catchErrorsAndTransform2)
 				.block();
 				
 		return user;
@@ -77,14 +82,17 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public MyUser findById(String userId) {
 		
-		MyUser user = userClient
+		WebClient.ResponseSpec enclume = userClient
 				.method(HttpMethod.POST)
 				.uri(USER_BY_ID)
 				.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 				.body(Mono.just(userId), String.class)
-				.exchange()
-				.flatMap(catchErrorsAndTransform)
-				.block();
+				.retrieve();
+						
+		MyUser user = enclume
+					.toEntity(MyUser.class) 
+					.flatMap(catchErrorsAndTransform2)
+					.block();		
 		
 		return user;
 	}
@@ -143,8 +151,9 @@ public class UserServiceImpl implements UserService {
 			.uri(DELETE_ADDRESS)
 			.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 			.body(Mono.just(deleteOp), AddressOperation.class)
-			.exchange()
-			.flatMap(catchErrorsAndTransform)
+			.retrieve()
+			.toEntity(MyUser.class)
+			.flatMap(catchErrorsAndTransform2)
 			.block();
 		
 	}
@@ -164,8 +173,9 @@ public class UserServiceImpl implements UserService {
 			.uri(ADD_ADDRESS)
 			.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 			.body(Mono.just(addOp), AddressOperation.class)
-			.exchange()
-			.flatMap(catchErrorsAndTransform)
+			.retrieve()
+			.toEntity(MyUser.class)
+			.flatMap(catchErrorsAndTransform2)
 			.block();	
 	}
 
@@ -183,8 +193,9 @@ public class UserServiceImpl implements UserService {
 			.uri(DELETE_PAYMENT_METHOD)
 			.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 			.body(Mono.just(deleteOp), PaymentOperation.class)
-			.exchange()
-			.flatMap(catchErrorsAndTransform)
+			.retrieve()
+			.toEntity(MyUser.class)
+			.flatMap(catchErrorsAndTransform2)
 			.block();
 	}
 	
@@ -203,38 +214,43 @@ public class UserServiceImpl implements UserService {
 			.uri(ADD_PAYMENT_METHOD)
 			.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 			.body(Mono.just(addOp), PaymentOperation.class)
-			.exchange()
-			.flatMap(catchErrorsAndTransform)
+			.retrieve()
+			.toEntity(MyUser.class)
+			.flatMap(catchErrorsAndTransform2)
 			.block();
 	}
 	
 
 	@Override
 	public MyUser saveUser(MyUser user) {
-						
-		userClient
+					
+		WebClient.ResponseSpec enclume = userClient
 		.method(HttpMethod.POST)
 		.uri(CREATE_USER)
 		.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 		.body(Mono.just(user), MyUser.class)
-		.exchange()
-		.flatMap(clientResponse -> {
-			if (clientResponse.statusCode().equals(HttpStatus.CONFLICT)) {
-				System.err.println("LOREM IPSUM");
-				throw new DuplicateUserException();
-			}
-			if (clientResponse.statusCode().is5xxServerError()) {			
-				throw new UnknownServerException();
-			} else {
-				// String, not MyUser
-				return clientResponse.bodyToMono(String.class);
-			}
-		})
-		.block();
+		.retrieve();
+			
+		String uri = enclume
+			.toBodilessEntity()
+			.flatMap(catchErrorsAndTransformCreate2)
+			.block();
 		
 		return user;	
 	}
 	
+	
+	// helper function used as transformer
+	Function<ResponseEntity<MyUser>, Mono<MyUser>> catchErrorsAndTransform2 = 
+				(ResponseEntity<MyUser> clientResponse) -> {
+					if (clientResponse.getStatusCode().is5xxServerError()) {
+						throw new UnknownServerException();
+					} else if (clientResponse.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+						throw new UserNotFoundException();
+					} else {
+						return Mono.just(clientResponse.getBody());
+					}
+		};
 	
 	// helper function used as transformer
 	Function<ClientResponse, Mono<MyUser>> catchErrorsAndTransform = 
@@ -246,6 +262,16 @@ public class UserServiceImpl implements UserService {
 				} else {
 					return clientResponse.bodyToMono(MyUser.class);
 				}
-			};
+	};
+	
+	// helper function returns Mono<String> if OK
+	Function<ResponseEntity<Void>, Mono<String>> catchErrorsAndTransformCreate2 = 
+							(ResponseEntity<Void> clientResponse) -> {
+								if (clientResponse.getStatusCode().is5xxServerError()) {
+									throw new UnknownServerException();
+								} else {
+									return Mono.just(clientResponse.getHeaders().get("location").get(0));
+								}
+		};
 	
 }

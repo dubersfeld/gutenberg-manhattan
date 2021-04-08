@@ -3,6 +3,7 @@ package com.dub.spring;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.text.ParseException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -13,6 +14,7 @@ import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.dub.spring.domain.EditCart;
 import com.dub.spring.domain.Item;
@@ -25,7 +27,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@SpringBootTest
+@ActiveProfiles("test")
+@SpringBootTest(properties = {"eureka.client.enabled=false"})
 public class OrderServiceTest {
 	
 	@Autowired
@@ -54,7 +57,7 @@ public class OrderServiceTest {
 	@Test
 	void testCreateOrder() {
 		Order newOrder = new Order();	
-		newOrder.setDate(new Date());
+		newOrder.setDate(LocalDateTime.now());
 		newOrder.setState(OrderState.CART);
 		newOrder.setUserId("5a28f364acc04f7f2e9740b7");
 		

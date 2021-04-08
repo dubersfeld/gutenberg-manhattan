@@ -46,63 +46,49 @@ public class PaymentController {
 		if (result.hasErrors()) {
 			return "payments/authorize";
 		} else {
-		
-		
+			
 			HttpSession session = request.getSession();
-				
+						
 			String orderId = orderUtils.getActiveOrderId(session);
 				
 			int totalSave = (int)session.getAttribute("total");
 			
-		
 			Order order = orderService.getOrderById(orderId);
-			
-
-			
-			
-			
+							
 			// change state to PRE_AUTHORIZE
 			if (order.getState() == OrderState.CART) {
-			
+					
 				order = orderService.checkoutOrder(order.getId());
 			}
-				
-			
-			
+								
 			// recalculate totals
 			try {
 				// recalculate total
 				order = orderService.getOrderById(orderId);
-			
-					
-				
+							
 				if (totalSave == order.getSubtotal()) {
-					
+							
 					Payment payment = new Payment();
 					payment.setAmount(order.getSubtotal()/100.0);
 					payment.setCardNumber(form.getCardNumber());
 					payment.setCardName(form.getName());
-						
-					
+									
 					boolean paymentSuccess = paymentService.authorizePayment(payment);
-					
-						
-					
+								
 					// transition order state to CART in case of payment failure
 					if (!paymentSuccess) {	
 					
 						order = orderService
 								.setCart(order.getId());
 					}
-				
+										
 					session.setAttribute("paymentSuccess", paymentSuccess);
 					// redirect to OrderController 
-					
-					
+									
 					return "redirect:/payment";
 				} else  {	
 					orderService.setCart(orderId);
-					
+				
 					return "redirect:/getCart";
 				}
 			} catch (RuntimeException e) {	

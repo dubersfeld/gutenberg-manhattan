@@ -44,16 +44,18 @@ public class ReviewServiceImpl implements ReviewService {
 	@Override
 	public String createReview(Review review) {
 			
-		String location = reviewClient
+		 WebClient.ResponseSpec enclume = reviewClient
 			.method(HttpMethod.POST)
 			.uri(CREATE_REVIEW)
 			.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 			.body(Mono.just(review), Review.class)
-			.exchange()
-			.flatMap(catchErrorsAndTransformCreate)
-			.block();
+			.retrieve();
+		 
+		String location = enclume
+				 .toBodilessEntity()
+				 .flatMap(catchErrorsAndTransformCreate2)
+				 .block();
 		
-	
 		return location;
 	}
 	
@@ -112,8 +114,9 @@ public class ReviewServiceImpl implements ReviewService {
 			.uri(ADD_VOTE + reviewId)
 			.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 			.body(Mono.just(reviewVote), Boolean.class)
-			.exchange()
-			.flatMap(catchErrorsAndTransform)
+			.retrieve()
+			.toEntity(Review.class)
+			.flatMap(catchErrorsAndTransform2)
 			.block();
 			
 	}
@@ -136,30 +139,28 @@ public class ReviewServiceImpl implements ReviewService {
 		
 	}
 	
-	// helper function returns Mono<Review> if OK
-	Function<ClientResponse, Mono<Review>> catchErrorsAndTransform = 
-				(ClientResponse clientResponse) -> {
-					if (clientResponse.statusCode().is5xxServerError()) {
-						throw new UnknownServerException();
-					} else if (clientResponse.statusCode().equals(HttpStatus.NOT_FOUND)) {
-						throw new ReviewNotFoundException();
-					} else {
-						return clientResponse.bodyToMono(Review.class);
-					}
+	
+	Function<ResponseEntity<Review>, Mono<Review>> catchErrorsAndTransform2 = 
+			(ResponseEntity<Review> clientResponse) -> {
+				if (clientResponse.getStatusCode().is5xxServerError()) {
+					throw new UnknownServerException();
+				} else if (clientResponse.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+					throw new ReviewNotFoundException();
+				} else {
+					return Mono.just(clientResponse.getBody());
+				}
 	};
 	
+	
 	// helper function returns Mono<String> if OK
-	Function<ClientResponse, Mono<String>> catchErrorsAndTransformCreate = 
-					(ClientResponse clientResponse) -> {
-						if (clientResponse.statusCode().is5xxServerError()) {
-							throw new UnknownServerException();
-						} else {
-							Mono<ResponseEntity<Void>> respEnt = clientResponse.toBodilessEntity();				
-							return respEnt.flatMap(s -> {
-								return Mono.just(s.getHeaders().get("location").get(0));
-							});
-						}
-		};
+	Function<ResponseEntity<Void>, Mono<String>> catchErrorsAndTransformCreate2 = 
+						(ResponseEntity<Void> clientResponse) -> {
+							if (clientResponse.getStatusCode().is5xxServerError()) {
+								throw new UnknownServerException();
+							} else {
+								return Mono.just(clientResponse.getHeaders().get("location").get(0));
+							}
+	};
 	
 	
 	

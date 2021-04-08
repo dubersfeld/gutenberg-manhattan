@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -50,33 +51,33 @@ public class BookServiceImpl implements BookService {
 	@Override
 	public Book getBookBySlug(String slug) {
 		
-		Book book = bookClient
-		.method(HttpMethod.GET)
-		.uri(BOOKS + slug)
-		.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-		.exchange()
-		.flatMap(catchErrorsAndTransform)
-		.block();
+		WebClient.ResponseSpec enclume = bookClient
+				.method(HttpMethod.GET)
+				.uri(BOOKS + slug)
+				.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+				.retrieve();
 		
+		Book book = enclume.bodyToMono(Book.class).block();
+
 		return book;
 	}
 	
 	
 	@Override
 	public Book getBookById(String id) {
-	
-		Book book = bookClient
-		.method(HttpMethod.GET)
-		.uri(BOOK_BY_ID + id)
-		.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-		.exchange()
-		.flatMap(catchErrorsAndTransform)
-		.block();
 		
+		WebClient.ResponseSpec enclume = bookClient
+				.method(HttpMethod.GET)
+				.uri(BOOK_BY_ID + id)
+				.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+				.retrieve();
+		
+		Book book = enclume.bodyToMono(Book.class).block();
+
 		return book;
 	}
 	
-	
+		
 	public List<Book> allBooksByCategory(String categorySlug, String sortBy) {
 				
 		WebClient.RequestBodySpec requestSpec = bookClient
@@ -116,7 +117,7 @@ public class BookServiceImpl implements BookService {
 		 * first step: find all books 
 		 * already reviewed by user referenced by userId 
 		 * */
-					
+				
 		List<Review> reviews = reviewService.getReviewsByUserId(userId);
 					
 		List<String> reviewedBookIds = new ArrayList<>();
@@ -141,16 +142,17 @@ public class BookServiceImpl implements BookService {
 									reviewedBookIds, 
 									outLimit);
 												
-		Flux<String> bookIdFlux = orderClient
+		WebClient.ResponseSpec enclume = orderClient
 					.method(HttpMethod.POST)
 					.uri(BOOKS_NOT_REVIEWED)
 					.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 					.body(Mono.just(userAndReviewedBooks), UserAndReviewedBooks.class)		
-					.exchange()
-					.flatMapMany(catchErrorsAndTransformFlux);
-								
-		List<String> bookIds = bookIdFlux.collectList().block();
-				
+					.retrieve();
+		
+		ResponseEntity<Flux<String>> smurf = enclume.toEntityFlux(String.class).block();
+		
+		List<String> bookIds = smurf.getBody().collectList().block();
+					
 		List<Book> booksToReview = new ArrayList<>();
 		
 		for (String bookId : bookIds) {	
@@ -160,6 +162,7 @@ public class BookServiceImpl implements BookService {
 		}
 					
 		return booksToReview;
+
 	}
 	
 	
@@ -220,7 +223,7 @@ public class BookServiceImpl implements BookService {
 						} else {
 							return clientResponse.bodyToMono(Book.class);
 						}
-					};
+	};
 					
 	// helper function returns Mono<BookWebList> if OK
 	Function<ClientResponse, Mono<BookWebList>> catchErrorsAndTransformList = 
@@ -243,7 +246,20 @@ public class BookServiceImpl implements BookService {
 							throw new BookNotFoundException();
 						} else {
 							return clientResponse.bodyToFlux(String.class);
-						}
-					};
+						}				
+	};
+	
+	
+	/*
+	Function<WebClient.ResponseEnt, Flux<String>> grunge = 
+			(WebClient.ResponseSpec clientResponse) -> {
+				if (clientResponse.getStatusCode().is5xxServerError()) {
+					throw new UnknownServerException();				
+				} else if (clientResponse.statusCode().equals(HttpStatus.NOT_FOUND)) {
+					throw new BookNotFoundException();
+				} else {
+					return clientResponse.bodyToFlux(String.class);
+				}				
+};*/
 
 }

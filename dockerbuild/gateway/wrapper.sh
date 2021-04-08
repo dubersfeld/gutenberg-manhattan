@@ -1,5 +1,16 @@
 #!/bin/sh
 
+while ! `nc -z $CONFIGSERVER_HOST $CONFIGSERVER_PORT`; do 
+    echo "*********************************************************************"
+    echo "Waiting for $CONFIGSERVER_HOST server to start on port $CONFIGSERVER_PORT"
+    echo "*********************************************************************"
+    sleep 10; 
+done
+
+echo `nc -z $CONFIGSERVER_HOST $CONFIGSERVER_PORT`
+echo "Config Server $CONFIGSERVER_HOST up and running at $CONFIGSERVER_PORT"
+
+
 while ! `nc -z -v $BOOKSERVER_HOST $BOOKSERVER_PORT`; do 
     echo "*********************************************************************"
     echo "Waiting for $BOOKSERVER_HOST server to start on port $BOOKSERVER_PORT"
@@ -46,7 +57,6 @@ echo `nc -z -v $USERSERVER_HOST $USERSERVER_PORT`
 echo "User Server $USERSERVER_HOST up and running at $USERSERVER_PORT"
 
 
-
-./cnb/lifecycle/launcher
+./cnb/process/web
 
 

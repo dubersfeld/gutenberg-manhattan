@@ -1,5 +1,6 @@
 package com.dub.spring.domain;
 
+// encapsulation object
 public class Item {
 	
 	private String bookId;// String not ObjectId

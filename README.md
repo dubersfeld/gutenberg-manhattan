@@ -1,11 +1,10 @@
 # gutenberg-manhattan
 I present here a microservice-oriented application that uses some basic Docker features including docker-compose. It consists of a collection of separate servers all running in Docker containers. MongoDB is used for persistence and also runs in a container. Moreover all backend servers use reactive connection to MongoDB and Spring WebFlux rather than Spring RESTful. All backend servers are tested using JUnit5 test classes.
 
-
 Here are the prerequisites for running the complete application:
 
-A recent Docker version installed (I used 19.03.11-ce)
-A recent Apache Maven version installed (I used 3.6.0)
+A recent Docker version installed (I used 20.10.4-ce)
+A recent Apache Maven version installed (I used 3.6.3)
 
 In addition I used Spring Tool Suite for developing this demo but it is not required for running the application.
 
@@ -46,40 +45,78 @@ Here are the steps to run the application:
 
 Here we use the docker support of spring-boot.
 
-In folder dockerbuild/booksonline run the shell script booksBuild. It will create a local mongo image that contains a Javascript file gutenberg.js.
+In folder dockerbuild/booksonline run the shell script booksBuild. It will create a local mongo image that contains a Javascript file gutenberg.js. Then run the script booksVolume. It creates a named volume gutenberg-books-db that persists a MongoDB database and also a container that is used for testing only.
 
-In folder dockerbuild run the shell script springBuild. It will build all Spring images. 
+```
+#!/bin/bash
+# file name booksVolume
+# Create a named volume and prepopulate it
+
+# from image gutenberg/books-mongodb to volume books-mongodb
+
+docker volume rm gutenberg-books-db
+docker volume create gutenberg-books-db
+
+docker run --name books_create -d --rm --mount source=gutenberg-books-db,target=/data/db \
+--env MONGO_INITDB_ROOT_USERNAME=root --env MONGO_INITDB_ROOT_PASSWORD=root -p 27017:27017 gutenberg/books-mongodb
+```
+
+In folder dockerbuild run the shell script buildSpring. It will build all Spring images. 
 Note that a test is included in the build process and that the actual build happens only if the test is successful.
 
 ```
 #!/bin/bash
-# file name springBuild
-for server in 'config-server' 'book-server' 'review-server' 'order-server' 'user-server' 'gateway-server' 'eureka-server' 'frontend-server';
+#buildSpring
+for server in 'book-server' 'order-server' 'review-server' 'user-server'; 
 do 
-    echo ${server}
+  echo ${server}
     pwd
     cd booksonline
     pwd
-    echo "./bookRestore"
+    echo "./booksRestore"
     ./booksRestore
     cd ../../$server
     pwd
-    echo "./build"
-    ./build
+    echo "./buildLocal"
+    ./buildLocal
     cd ../dockerbuild
-
+   
     echo $?
     if [ "$?" -ne 0 ]
     then 
       echo "Build failed for $server"
       exit "$?"
-    fi
+    fi  
+
+done;
+echo "Now building cloud and frontend "
+for server in 'eureka-server' 'gateway-server' 'config-server' 'frontend-server';
+do 
+  echo ${server}
+    cd ../$server  
+    pwd
+    echo "./buildLocal"
+    ./buildLocal
+    
+    echo $?
+    if [ "$?" -ne 0 ]
+    then 
+      echo "Build failed for $server"
+      exit "$?"
+    fi  
+
 done;
 ```
 
-Note that a volume named gutenberg-books-db is created by this script.
+Then run the script buildSecond that creates the final images.
 
 Finally in the folder dockerbuild/booksonline run the script `booksKill`. It kill the container but leaves the volume prepopulated.
+
+```
+#!/bin/bash
+# file name booksKill
+docker rm -f books_create
+```
 
 # 3. Running the application
 
@@ -90,7 +127,6 @@ sudo docker-compose up
 ```
 
 ```
-# filename docker-compose.yml
 version: '3.4'
 
 services:
@@ -102,7 +138,7 @@ services:
       - type: volume
         source: booksdb
         target: /data/db 
-    # Note mongod not mongo because we start a server not a client
+    # Note mongod not mongo because we start a server not a client      
     command: mongod --auth
     ports:
       # Note the syntax host:container
@@ -147,9 +183,9 @@ services:
       - CONFIGSERVER_HOST=config-server
       - CONFIGSERVER_PORT=8888
       - GUTENBERG_CONFIG_URI=http://config-server:8888
-      - EUREKASERVER_URI=http://eureka-server:8761/eureka/
-      - PROFILE=dev
-
+      - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
+      - SPRING_PROFILES_ACTIVE=dev
+      
   # review-service
   review-service:
     image: gutenberg/review-server
@@ -165,9 +201,9 @@ services:
       - CONFIGSERVER_PORT=8888
       - GUTENBERG_CONFIG_URI=http://config-server:8888
       - BASE_REVIEWS_URL=http://gateway-service:5555/reviews
-      - EUREKASERVER_URI=http://eureka-server:8761/eureka/
-      - PROFILE=dev
-
+      - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
+      - SPRING_PROFILES_ACTIVE=dev
+      
   # order-service
   order-service:
     image: gutenberg/order-server
@@ -183,9 +219,9 @@ services:
       - CONFIGSERVER_HOST=config-server
       - CONFIGSERVER_PORT=8888
       - GUTENBERG_CONFIG_URI=http://config-server:8888
-      - EUREKASERVER_URI=http://eureka-server:8761/eureka/
-      - PROFILE=dev
-
+      - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
+      - SPRING_PROFILES_ACTIVE=dev   
+      
   # user-service
   user-service:
     image: gutenberg/user-server
@@ -200,10 +236,10 @@ services:
       - CONFIGSERVER_HOST=config-server
       - CONFIGSERVER_PORT=8888
       - GUTENBERG_CONFIG_URI=http://config-server:8888
-      - BASE_USERS_URL=http://user-service:8084/users
-      - EUREKASERVER_URI=http://eureka-server:8761/eureka/
-      - PROFILE=dev
-
+      - BASE_USERS_URL=http://gateway-service:5555/users
+      - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
+      - SPRING_PROFILES_ACTIVE=dev   
+      
   # gateway-service
   gateway-service:
     image: gutenberg/gateway-server
@@ -213,7 +249,6 @@ services:
     ports:
       # host:container
       - 5555:5555
-
     environment:
       - BOOKSERVER_URI=http://book-service:8081
       - BOOKSERVER_HOST=book-service
@@ -227,12 +262,12 @@ services:
       - USERSERVER_URI=http://user-service:8084
       - USERSERVER_HOST=user-service
       - USERSERVER_PORT=8084
-      - EUREKASERVER_URI=http://eureka-server:8761/eureka/
+      - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
       - CONFIGSERVER_HOST=config-server
       - CONFIGSERVER_PORT=8888
       - GUTENBERG_CONFIG_URI=http://config-server:8888
-      - PROFILE=dev
-     
+      - SPRING_PROFILES_ACTIVE=dev  
+      
   # frontend-service
   frontend-service:
     image: gutenberg/frontend-server
@@ -253,9 +288,9 @@ services:
       - BASE_USERS_URL=http://gateway-service:5555/users 
       - GATEWAYSERVER_HOST=gateway-service
       - GATEWAYSERVER_PORT=5555
-      - EUREKASERVER_URI=http://eureka-server:8761/eureka/
+      - EUREKASERVER_URI=http://eureka-server:8761/eureka/     
       - GUTENBERG_CONFIG_URI=http://config-server:8888
-      - PROFILE=dev
+      - SPRING_PROFILES_ACTIVE=dev            
 
 volumes:
   booksdb:
@@ -326,6 +361,6 @@ Checkout page:
 Payment page:
 ![alt text](images/checkoutSuccess.png "Payment page")
 
-Cachan, September 19 2020
+Cachan, April 7 2021
  
 Dominique Ubersfeld

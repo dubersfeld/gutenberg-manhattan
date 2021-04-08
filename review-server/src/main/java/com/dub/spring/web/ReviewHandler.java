@@ -183,6 +183,8 @@ public class ReviewHandler {
 					return newReviewId
 							.flatMap(s -> {
 								try {
+									String enclume = baseReviewsURL + "/reviewById/" + s;
+									
 									return Mono.just(new URI(baseReviewsURL + "/reviewById/" + s));
 								} catch (URISyntaxException e) {
 									e.printStackTrace();

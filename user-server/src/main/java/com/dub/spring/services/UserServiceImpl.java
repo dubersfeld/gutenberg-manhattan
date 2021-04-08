@@ -42,8 +42,6 @@ public class UserServiceImpl implements UserService {
 	
 		Mono<MyUser> user = userRepository.findById(userId);
 		
-		user.subscribe(u -> System.out.println(u.getUsername()));
-		
 		return user.hasElement().flatMap(present -> {
 			if (present) {
 				
@@ -94,7 +92,10 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Mono<MyUser> addAddress(String userId, Address newAddress) {
 		Mono<MyUser> user = userRepository.findById(userId);
+	
 		
+		user.subscribe(u -> System.err.println("LAPIN " + u.getUsername()));
+
 		return user.flatMap(u -> {
 			u.getAddresses().add(newAddress);
 			return this.userRepository.save(u);
@@ -104,9 +105,12 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Mono<MyUser> addPaymentMethod(String userId, PaymentMethod newPayment) {
 		Mono<MyUser> user = userRepository.findById(userId);
-				 
+				
+		user.subscribe(u -> System.err.println("CHEVAL " + u.getUsername()
+					+ " " + newPayment.getCardNumber()));
 		return user.flatMap(u -> {
 			u.getPaymentMethods().add(newPayment);
+			Mono<MyUser> toto = this.userRepository.save(u);
 			return this.userRepository.save(u);		 
 		});
 	}
@@ -118,12 +122,15 @@ public class UserServiceImpl implements UserService {
 		Update update = new Update();
 		query.addCriteria(Criteria.where("_id").is(userId));
 		update.pull("addresses", delAddress);
+		
 		Mono<MyUser> user = reactiveMongoOperations.findAndModify(
 											query, 
 											update, 
 											new FindAndModifyOptions()
 													.returnNew(true),
 											MyUser.class);
+			
+		
 		return user;
 		
 	}

@@ -1,29 +1,49 @@
 package com.dub.spring;
 
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
+import org.bson.types.ObjectId;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.dub.spring.domain.Book;
+import com.dub.spring.domain.BookDocument;
+import com.dub.spring.domain.CategoryDocument;
 import com.dub.spring.exceptions.BookNotFoundException;
+import com.dub.spring.repository.BookRepository;
+import com.dub.spring.repository.CategoryRepository;
 import com.dub.spring.services.BookService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@SpringBootTest
+@ActiveProfiles("test")
+@SpringBootTest(properties = {"eureka.client.enabled=false"})
 public class BookServiceTest {
 
 	@Autowired
 	BookService bookService;
 	
+	@Autowired
+	BookRepository bookRepository;
+	
+	
+	@Autowired
+	CategoryRepository categoryRepository;
 						
 	private Predicate<Book> testById = 
-			book -> "emerald-ultimate-421".equals(book.getSlug());
+			book -> {
+				boolean match = "emerald-ultimate-421".equals(book.getSlug());
+				return match;
+	};
 			
 	private Predicate<Book> testBySlug = 
 			book -> {
@@ -41,8 +61,7 @@ public class BookServiceTest {
 				return match; 
 	};	
 	
-									
-		
+	
 	@Test
 	void testBookBySlug() {	     
 		Mono<Book> book = bookService.getBookBySlug("emerald-ultimate-421");
@@ -112,13 +131,12 @@ public class BookServiceTest {
 		
 		List<Book> list = books.collectList().block();
 		
-	
-			
+
 	    StepVerifier.create(books.log())
 	     			.expectNextMatches(testBoughtWith)
 	     			.expectNextCount(2)
 	     			.verifyComplete(); 
 	
 	}
-	
+		
 }

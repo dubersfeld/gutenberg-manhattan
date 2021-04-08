@@ -122,6 +122,10 @@ db.books.insert(
         "java",
         "spring",
         "messaging"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        5
     ]
 });
 
@@ -143,6 +147,10 @@ db.books.insert(
         "malware",
         "system",
         "blackhat"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        4
     ]
 });
 
@@ -163,6 +171,10 @@ db.books.insert(
         "software",
         "web",
         "database"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        5
     ]
 });
 
@@ -183,6 +195,10 @@ db.books.insert(
         "microservice",
         "web",
         "restful"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        4
     ]
 });
 
@@ -203,7 +219,11 @@ db.books.insert(
         "database",
         "schemaless",
         "nosql"
-    ]  
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        5
+    ]
 });
 
 db.books.insert(
@@ -223,6 +243,10 @@ db.books.insert(
         "computer",
         "system",
         "mathematics"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        3
     ]
 });
 
@@ -243,6 +267,12 @@ db.books.insert(
         "biography",
         "science",
         "history"
+    ],
+    "totalReviews" : 3,
+    "ratings" : [
+        5,
+        1,
+        2
     ]
 });
 
@@ -263,6 +293,10 @@ db.books.insert(
         "biography",
         "science",
         "history"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        5
     ]
 });
 
@@ -283,6 +317,10 @@ db.books.insert(
         "biography",
         "literature",
         "women"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        2
     ]
 });
 
@@ -303,6 +341,10 @@ db.books.insert(
         "biography",
         "literature",
         "medicine"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        4
     ]
 });
 
@@ -323,6 +365,10 @@ db.books.insert(
         "thriller",
         "crime",
         "spying"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        5
     ]
 });
 
@@ -343,6 +389,10 @@ db.books.insert(
         "thriller",
         "crime",
         "software"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        5
     ]
 });
 
@@ -363,7 +413,11 @@ db.books.insert(
         "home",
         "life",
         "food"
-    ] 
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        4
+    ]
 });
 
 db.books.insert(
@@ -383,6 +437,10 @@ db.books.insert(
         "piracy",
         "science-fiction",
         "gold"
+    ],
+    "totalReviews" : 1,
+    "ratings" : [
+        5
     ]
 });
 
@@ -403,6 +461,12 @@ db.books.insert(
         "apes",
         "life",
         "depression"
+    ],
+    "totalReviews" : 3,
+    "ratings" : [
+        4,
+        4,
+        4
     ]
 });
 

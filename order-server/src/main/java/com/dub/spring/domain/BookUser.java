@@ -1,6 +1,6 @@
 package com.dub.spring.domain;
 
-
+// Yet another encapsulation object
 public class BookUser {
 
 	private String userId;

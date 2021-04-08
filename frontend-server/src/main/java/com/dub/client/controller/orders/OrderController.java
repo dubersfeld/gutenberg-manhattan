@@ -159,9 +159,13 @@ public class OrderController {
 		
 		try {
 			
+			System.err.println("/payment begin");
+			
 			HttpSession session = request.getSession();
 			Boolean placed = false;
 			Order order = null;
+			
+			System.err.println("/payment SATOR");
 		
 			/** 
 			 * Initially Boolean placed == null 
@@ -171,20 +175,23 @@ public class OrderController {
 				placed = (Boolean)session.getAttribute("placed"); 
 			}
 			
+			System.err.println("/payment AREPO");
 			MyUser user = userUtils.getLoggedUser(session);
-		
+			System.err.println("/payment TENET");
 			
 			String orderId = orderUtils.getActiveOrderId(session);
-		
+			System.err.println("/payment OPERA");
 			
 			order = orderService.getOrderById(orderId);
-		
+			System.err.println("/payment ROTAS");
 			
 				
 			// preparing order display
 		
 			List<DisplayItemPrice> items = displayUtils.getDisplayItemPrices(orderId);
 		
+			System.err.println("/payment AD PATRES");
+			
 			double total = order.getSubtotal()/100.0;
 						
 			model.addAttribute("items", items);
@@ -224,23 +231,33 @@ public class OrderController {
 		
 			}
 		
-			
+			System.err.println("/payment AD LIBITUM");
 			
 			model.addAttribute("payMeth", payMeth);			
 			model.addAttribute("total", total);
 			session.setAttribute("total", order.getSubtotal());
 			
+			System.err.println("/payment AD HOMINEM");
+			
 			if (session.getAttribute("paymentSuccess") != null) {// from redirection				
+				
+				System.err.println("/payment success");
 				placed = (Boolean)session.getAttribute("paymentSuccess");
 				model.addAttribute("placed", placed);
 				model.addAttribute("denied", !placed);
 				if (placed) {// success
+					System.err.println("/payment placed");
 					// add actual shipping address to order before persisting	
 				
 					orderService.finalizeOrder(order, shipAdd, payMeth);
 					
+					System.err.println("/payment finalize date "
+							+ order.getDate());
+					
 					orderService.saveOrder(order);// actual persistence	
 				
+					System.err.println("/payment saveOrder");
+					
 					orderUtils.invalidActiveOrderId(session);// order becomes non editable 
 					session.setAttribute("paymentSuccess", null);
 				} else {// failure, state transition to CART 
@@ -250,6 +267,7 @@ public class OrderController {
 				}
 			}
 		
+			System.err.println("/payment AD ADA SUR MON BIDET");
 			// find other books frequently bought with these books
 		
 			List<DisplayOthers> others = displayUtils

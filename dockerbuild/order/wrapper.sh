@@ -11,6 +11,6 @@ echo `nc -z $CONFIGSERVER_HOST $CONFIGSERVER_PORT`
 echo "Config Server $CONFIGSERVER_HOST up and running at $CONFIGSERVER_PORT"
 
 
-./cnb/lifecycle/launcher
+./cnb/process/web
 
 

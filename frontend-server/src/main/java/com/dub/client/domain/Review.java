@@ -1,5 +1,6 @@
 package com.dub.client.domain;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,7 +16,7 @@ public class Review {
 	private String id;
 	
 	private String bookId;
-	private Date date;
+	private LocalDateTime date;
 	private String title;
 	private String text;
 	private int rating;
@@ -36,11 +37,11 @@ public class Review {
 		this.id = id;
 	}
 
-	public Date getDate() {
+	public LocalDateTime getDate() {
 		return date;
 	}
 
-	public void setDate(Date date) {
+	public void setDate(LocalDateTime date) {
 		this.date = date;
 	}
 

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+./booksKill
+docker volume rm gutenberg-books-db
+docker volume create gutenberg-books-db
+./booksCreate
+

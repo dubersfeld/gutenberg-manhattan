@@ -1,14 +1,18 @@
 package com.dub.spring;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import com.dub.spring.domain.Address;
@@ -26,19 +31,27 @@ import com.dub.spring.domain.PaymentMethod;
 import com.dub.spring.domain.PaymentOperations;
 import com.dub.spring.domain.Primary;
 import com.dub.spring.domain.ProfileOperations;
+import com.dub.spring.domain.UserAuthority;
+import com.dub.spring.repository.UserRepository;
 import com.dub.spring.web.UserHandler;
 import com.dub.spring.web.UserRouter;
 
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@SpringBootTest
+
+@ActiveProfiles("test")
+@SpringBootTest(webEnvironment=RANDOM_PORT, properties = {"eureka.client.enabled=false"})
+
 public class UserHandlerTest {
 	
 	@Value("${baseUsersUrl}")
 	private String baseUsersURL;
 	
-
+	/*@Autowired
+	private UserRepository userRepository;
+*/
+	
 	@Autowired
 	UserRouter userRouter;
 	
@@ -55,30 +68,24 @@ public class UserHandlerTest {
 	private PaymentMethod delPayment = new PaymentMethod();
 	
 
-	@PostConstruct
-	private void init() {
+	@BeforeEach
+	public void setup() {
+		newPayment.setCardNumber("1111222233334444");
+		newPayment.setName("Paul Enclume");
+		
+		newAddress.setCity("Paris");
+		newAddress.setCountry("France");
+		newAddress.setStreet("5 Avenue Victoria");
+		newAddress.setZip("75001");
+		
 		newUser.setUsername("Nelson");
 		newUser.setHashedPassword("{bcrypt}$2a$10$Ip8KBSorI9R39m.KQBk3nu/WhjekgPSmfmpnmnf5yCL3aL9y.ITVW");
-		
+	
 		conflictUser.setUsername("Albert");
 		conflictUser.setHashedPassword("{bcrypt}$2a$10$Ip8KBSorI9R39m.KQBk3nu/WhjekgPSmfmpnmnf5yCL3aL9y.ITVW");
-	
-		newAddress.setCity("London");
-		newAddress.setCountry("United Kingdom");
-		newAddress.setStreet("10 Downing Street");
-		newAddress.setZip("SW1A 2AA");
 		
-		newPayment.setCardNumber("1111222255558888");
-		newPayment.setName("Jeff Bezos");
-		
-		delAddress.setCity("Paris");
-		delAddress.setCountry("FR");
-		delAddress.setStreet("42 rue Amélie Nothomb");
-		delAddress.setZip("75018");
-		
-		delPayment.setCardNumber("6789432167891234");
-		delPayment.setName("Alice Carrol");
 	}
+	
 	
 	private Predicate<MyUser> setPrimaryAddressPred =
 			user -> user.getMainShippingAddress() == 1;
@@ -244,6 +251,7 @@ public class UserHandlerTest {
 		.expectComplete()
 		.verify();	
 	}	
+	
 	
 	@Test
 	void deleteAddressTest() {

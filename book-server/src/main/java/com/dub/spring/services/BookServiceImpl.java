@@ -85,6 +85,7 @@ public class BookServiceImpl implements BookService {
 		Mono<ObjectId> objId = cat.map(c -> c.getId())
 							.map(c -> new ObjectId(c));
 	
+		
 		Flux<Book> books = bookRepository.findByCategoryId(
 				objId, Sort.by(Sort.Direction.ASC, sortBy))
 					.map(BookUtils::documentToBook);
@@ -134,7 +135,7 @@ public class BookServiceImpl implements BookService {
 		
 		Flux<Flux<BookCount>> temp = userIds.map(
 				userId -> {
-					System.err.println("muhammad " + userId);
+					
 					MatchOperation match1 = match(Criteria.where("state").is("SHIPPED")
 							.and("userId").is(userId));	
 					GroupOperation group = group("bookId").count().as("count");

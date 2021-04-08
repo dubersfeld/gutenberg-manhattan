@@ -2,7 +2,9 @@ package com.dub.spring.domain;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Date;
+
+//java.lang.Object
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -23,7 +25,7 @@ public class OrderBase implements Serializable {
 	private Address shippingAddress;
 	private PaymentMethod paymentMethod;
 	private int subtotal;
-	private Date date;
+	private LocalDateTime date;
 	
 	public OrderBase() {
 		this.lineItems = new ArrayList<>();
@@ -94,12 +96,12 @@ public class OrderBase implements Serializable {
 	}
 
 
-	public Date getDate() {
+	public LocalDateTime getDate() {
 		return date;
 	}
 
 
-	public void setDate(Date date) {
+	public void setDate(LocalDateTime date) {
 		this.date = date;
 	}
 	

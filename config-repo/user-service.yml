@@ -1,14 +1,18 @@
-server:
-  port: 8083
-  servlet:
-    context-path:
-
 spring:
+  config: 
+    activate:
+      on-profile:
+        dev
   data:
     mongodb:
       uri: mongodb://spring:password1234@mongodb-books:27017/booksonline
-          
 
+server:
+  port: 8084
+  servlet:
+    context-path:
+    
+          
 eureka:
   instance:
     prefer-ip-address: true
@@ -17,10 +21,7 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: ${EUREKASERVER_URI}
-     
-     
-# base server URLs
-#baseBooksUrl: http://book-service:8081 
-    
 
 
+#baseUsersUrl: http://localhost:8084 
+baseUsersUrl: ${BASE_USERS_URL}

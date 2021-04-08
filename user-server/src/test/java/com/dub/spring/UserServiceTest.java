@@ -1,33 +1,46 @@
 package com.dub.spring;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import javax.annotation.PostConstruct;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.dub.spring.domain.Address;
 import com.dub.spring.domain.MyUser;
 import com.dub.spring.domain.PaymentMethod;
+import com.dub.spring.domain.UserAuthority;
 import com.dub.spring.exceptions.UserNotFoundException;
+import com.dub.spring.repository.UserRepository;
 import com.dub.spring.services.UserService;
 
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@SpringBootTest
+
+@ActiveProfiles("test")
+@SpringBootTest(properties = {"eureka.client.enabled=false"})
 public class UserServiceTest {
 	
 	@Autowired
 	private UserService userService;
 	
+	@Autowired
+	private UserRepository userRepository;
+	
 	private Address newAddress = new Address();
+	
 	private PaymentMethod newPayment = new PaymentMethod();
 	
 	private Address delAddress = new Address();
@@ -46,36 +59,27 @@ public class UserServiceTest {
 							user -> (addressMatch(user.getAddresses(), newAddress));//user.getMainPayMeth() == 1);
 				
 	private Predicate<MyUser> addPaymentPred = 
-					user -> (paymentMatch(user.getPaymentMethods(), newPayment));//user.getMainPayMeth() == 1);
+					user -> {/*System.err.println("SATOR " + user.getPaymentMethods().get(1).getCardNumber());*/
+							return paymentMatch(user.getPaymentMethods(), newPayment);};
 
 	private Predicate<MyUser> deleteAddressPred = 
-							user -> (!addressMatch(user.getAddresses(), delAddress));//user.getMainPayMeth() == 1);
+					user -> {System.err.println("AREPO ");
+						return !addressMatch(user.getAddresses(), delAddress);};
 				
 	private Predicate<MyUser> deletePaymentPred = 
 							user -> (!paymentMatch(user.getPaymentMethods(), delPayment));//user.getMainPayMeth() == 1);
 						
-							
-					
-	@PostConstruct
-	private void init() {
-		newAddress.setCity("London");
-		newAddress.setCountry("United Kingdom");
-		newAddress.setStreet("10 Downing Street");
-		newAddress.setZip("SW1A 2AA");
+	@BeforeEach
+	public void setUp() {
+		newPayment.setCardNumber("1111222233334444");
+		newPayment.setName("Paul Enclume");
 		
-		delAddress.setCity("Paris");
-		delAddress.setCountry("France");
-		delAddress.setStreet("31 rue du Louvre");
-		delAddress.setZip("75001");
-		
-		newPayment.setCardNumber("1111222233336666");
-		newPayment.setName("Mark Zuckerberg");
-		
-		delPayment.setCardNumber("8888777744441111");
-	    delPayment.setName("Jean Castex");
+		newAddress.setCity("Paris");
+		newAddress.setCountry("France");
+		newAddress.setStreet("5 Avenue Victoria");
+		newAddress.setZip("75001");
 	}
-	
-
+							
 	@Test
 	void createUserTest() {
 		List<Address> addresses = Arrays.asList(newAddress);
@@ -101,7 +105,6 @@ public class UserServiceTest {
 		MyUser user = this.userService.findById(userId).block();
 		assertEquals("Carol", user.getUsername());
 		
-	
 	}
 	
 	
@@ -196,12 +199,18 @@ public class UserServiceTest {
 	@Test
 	void deleteAddressTest() {
 		String userId = "5a28f2b2acc04f7f2e9740b0";
+		//String userId = "5a28f2b9acc04f7f2e9740b1";
+		//String userId = "5a28f2b0acc04f7f2e9740ae";
+		//MyUser user = this.userService.findById(userId).block();
+		//assertEquals("Carol", user.getUsername());
+	
 		// actual update
 		Mono<MyUser> user = userService.deleteAddress(userId, delAddress);
 		StepVerifier.create(user.log())
 		.expectNextMatches(deleteAddressPred)
 		.expectComplete()
 		.verify();		
+	
 	}
 	
 	
@@ -230,12 +239,7 @@ public class UserServiceTest {
 	
 	public static boolean paymentMatch(List<PaymentMethod> payMeths, PaymentMethod payMeth) {
 		boolean match = false;
-		for (PaymentMethod pM : payMeths) {
-				
-			System.err.println(pM.getCardNumber().equals(payMeth.getCardNumber()));
-			System.err.println(pM.getName().equals(payMeth.getName()));
-			System.err.println(pM.equals(payMeth));
-			
+		for (PaymentMethod pM : payMeths) {		
 			if (payMeth.equals(pM)) {
 				match = true;
 				break;

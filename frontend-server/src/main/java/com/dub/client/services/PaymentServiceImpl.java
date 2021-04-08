@@ -17,13 +17,13 @@ public class PaymentServiceImpl implements PaymentService {
 		logger.warn(Double.toString(payment.getAmount()));
 		logger.warn(payment.getCardNumber());
 		logger.warn(payment.getCardName());
-		
-		
+			
 		/** For debugging only */
 		if (payment.getCardName().equals("Richard Brunner")) {
 			logger.warn("Payment not authorized");
 			return false;
 		} else {
+			
 			return true;
 		}
 	}

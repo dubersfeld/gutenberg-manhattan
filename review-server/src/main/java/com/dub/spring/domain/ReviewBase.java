@@ -1,6 +1,8 @@
 package com.dub.spring.domain;
 
-import java.util.Date;
+
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.Id;
 
 public class ReviewBase {
@@ -8,7 +10,7 @@ public class ReviewBase {
 	@Id
 	private String id;
 	
-	private Date date;
+	private LocalDateTime date;
 	private String title;
 	private String text;
 	private int rating;
@@ -36,10 +38,10 @@ public class ReviewBase {
 	public void setId(String id) {
 		this.id = id;
 	}
-	public Date getDate() {
+	public LocalDateTime getDate() {
 		return date;
 	}
-	public void setDate(Date date) {
+	public void setDate(LocalDateTime date) {
 		this.date = date;
 	}
 	public String getTitle() {

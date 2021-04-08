@@ -41,7 +41,7 @@ public class Order implements Serializable {
 	//		format = DateFormat.custom, pattern = "uuuu-MM-dd'T'HH:mm:ss.SSS")// used for create and read
 	//@JsonFormat(shape = JsonFormat.Shape.STRING, pattern ="yyyy-MM-dd'T'HH:mm:ss.SSS")
 	
-	private Date date;
+	private LocalDateTime date;
 	
 	public Order() {
 		this.lineItems = new ArrayList<>();
@@ -110,13 +110,16 @@ public class Order implements Serializable {
 	}
 
 
-	public Date getDate() {
+	public LocalDateTime getDate() {
 		return date;
 	}
 
 
-	public void setDate(Date date) {
+	public void setDate(LocalDateTime date) {
 		this.date = date;
-	}	
+	}
+
+
+	
 
 }

@@ -15,7 +15,7 @@ pwd
 
 ls
 
-./cnb/lifecycle/launcher
+./cnb/process/web
 
 
 

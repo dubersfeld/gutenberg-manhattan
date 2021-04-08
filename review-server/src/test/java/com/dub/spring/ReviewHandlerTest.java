@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,17 +14,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import com.dub.spring.domain.Review;
 import com.dub.spring.domain.ReviewVote;
+import com.dub.spring.services.ReviewService;
 import com.dub.spring.web.ReviewHandler;
 import com.dub.spring.web.ReviewRouter;
 
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest
+@ActiveProfiles("test")
+@SpringBootTest(webEnvironment=RANDOM_PORT, properties = {"eureka.client.enabled=false"})
 public class ReviewHandlerTest {
 
 	@Autowired
@@ -31,6 +36,10 @@ public class ReviewHandlerTest {
 	
 	@Autowired
 	ReviewHandler reviewHandler;
+	
+	@Autowired
+	ReviewService reviewService;
+	
 	
 	private Predicate<Review> reviewsByUserIdPred = 
 			review -> review.getText().contains("everything HareFAQ");
@@ -50,7 +59,7 @@ public class ReviewHandlerTest {
 
 	private Predicate<Double> bookRatingPred = 
 					rating -> (2.6 < rating && rating < 2.7);
-		
+						
 				
 	@Test
 	void reviewsByUserId() {
@@ -133,7 +142,6 @@ public class ReviewHandlerTest {
 		.expectStatus().isCreated()
 		.returnResult(String.class)
 		.getResponseHeaders();// HttpHeaders
-		
 		
 		
 		String location = headers.get("location").get(0);
